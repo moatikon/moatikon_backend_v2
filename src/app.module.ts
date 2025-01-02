@@ -18,7 +18,8 @@ import * as Joi from 'joi';
         DB_DATABASE: Joi.string().required(),
         GOOGLE_CLIENT_ID: Joi.string().required(),
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
-        GOOGLE_CALL_BACK: Joi.string().required(),
+        GOOGLE_CALLBACK: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({

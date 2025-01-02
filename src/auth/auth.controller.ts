@@ -15,10 +15,6 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@GetGoogleUser() googleUser: GoogleUser) {
-
-    console.log(googleUser);
-    
-
     return await this.authService.googleCallback(googleUser);
   }
 }

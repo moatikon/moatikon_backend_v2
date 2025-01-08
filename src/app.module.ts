@@ -8,6 +8,7 @@ import * as Joi from 'joi';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './common/guard/jwt.guard';
 import { JwtModule } from '@nestjs/jwt';
+import { UtilModule } from './util/util.module';
 
 @Module({
   imports: [
@@ -24,6 +25,10 @@ import { JwtModule } from '@nestjs/jwt';
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
         GOOGLE_CALLBACK: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
+        S3_REGION: Joi.string().required(),
+        S3_BUCKET_NAME: Joi.string().required(),
+        S3_ACCESS_KEY: Joi.string().required(),
+        S3_SECRET_ACCESS_KEY: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -47,8 +52,8 @@ import { JwtModule } from '@nestjs/jwt';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: JwtGuard
-    }
-  ]
+      useClass: JwtGuard,
+    },
+  ],
 })
 export class AppModule {}

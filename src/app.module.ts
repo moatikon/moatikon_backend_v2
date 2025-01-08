@@ -3,7 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
+import { TikonModule } from './tikon/tikon.module';
 import * as Joi from 'joi';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtGuard } from './common/guard/jwt.guard';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -35,8 +39,15 @@ import * as Joi from 'joi';
         synchronize: true,
       }),
     }),
+    JwtModule.register({}),
     AuthModule,
     UserModule,
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtGuard
+    }
+  ]
 })
 export class AppModule {}

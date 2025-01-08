@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { JwtPayload } from 'src/common/interface/jwt-payload';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/error/user-not-found.exception';
+import { S3Service } from 'src/util/service/s3.service';
 
 @Injectable()
 export class TikonService {
@@ -14,6 +15,8 @@ export class TikonService {
     private readonly tikonRepository: Repository<Tikon>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    private readonly s3Service: S3Service,
   ) {}
 
   async create(
@@ -28,8 +31,10 @@ export class TikonService {
 
     if(!user) throw new UserNotFoundException();
 
+    const imageUrl = await this.s3Service.imageUploadToS3(image);
+
     const tikon = this.tikonRepository.create({
-      image: image.originalname,
+      image: imageUrl,
       tikonName,
       storeName,
       discount,

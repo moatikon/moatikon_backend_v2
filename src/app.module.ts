@@ -42,6 +42,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({}),
     AuthModule,
     UserModule,
+    TikonModule,
   ],
   providers: [
     {

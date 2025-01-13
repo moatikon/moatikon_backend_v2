@@ -16,7 +16,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async generateJwt(googleUser: User, isRefreshToken: boolean) {
+  async generateJwt(googleUser: GoogleUser, isRefreshToken: boolean) {
     return await this.jwtService.signAsync(
       {
         email: googleUser.email,
@@ -34,17 +34,17 @@ export class AuthService {
       where: { email: googleUser.email },
     });
 
-    if (userData) {
-      return new TokenResponse(
-        await this.generateJwt(userData, false),
-        await this.generateJwt(userData, true),
-      );
-    } else {
+    if (!userData) {
       const user = this.userRepository.create({
         email: googleUser.email,
         name: googleUser.name,
       });
       await this.userRepository.save(user);
-    }
+    } 
+
+    return new TokenResponse(
+      await this.generateJwt(googleUser, false),
+      await this.generateJwt(googleUser, true),
+    );
   }
 }

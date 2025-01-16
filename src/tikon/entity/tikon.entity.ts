@@ -1,6 +1,6 @@
 import { TikonCategory } from 'src/common/enum/tikon-category.enum';
 import { User } from 'src/user/entity/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Tikon {
@@ -27,4 +27,7 @@ export class Tikon {
 
   @ManyToOne(() => User, (user) => user.tikons)
   user: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

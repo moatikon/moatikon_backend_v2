@@ -29,7 +29,7 @@ export class TikonService {
       where: { email: jwtPayload.email },
     });
 
-    if(!user) throw new UserNotFoundException();
+    if (!user) throw new UserNotFoundException();
 
     const imageUrl = await this.s3Service.imageUploadToS3(image);
 
@@ -40,9 +40,24 @@ export class TikonService {
       discount,
       category,
       dDay,
-      user
+      user,
     });
 
     return await this.tikonRepository.save(tikon);
+  }
+
+  async findAll(jwtPayload: JwtPayload, page: number) {
+    const takeNumber = 10;
+    const { email } = jwtPayload;
+
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new UserNotFoundException();
+
+    return await this.tikonRepository.find({
+      where: { user },
+      order: { dDay: 'ASC', createdAt: 'ASC' },
+      take: takeNumber,
+      skip: page * takeNumber
+    }); 
   }
 }

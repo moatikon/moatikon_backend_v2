@@ -14,6 +14,7 @@ import { CreateTikonDto } from './dto/create-tikon.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GetPayload } from 'src/common/decorator/get-jwt-payload.decorator';
 import { JwtPayload } from 'src/common/interface/jwt-payload';
+import { FindTikonDto } from './dto/find-tikon.dto';
 
 @Controller('tikon')
 export class TikonController {
@@ -30,7 +31,7 @@ export class TikonController {
   }
 
   @Get()
-  findAll(@GetPayload() jwtPayload: JwtPayload, @Query('page', ParseIntPipe) page: number = 0) {
-    return this.tikonService.findAll(jwtPayload, page);
+  findAll(@GetPayload() jwtPayload: JwtPayload, @Query() findTikonDto: FindTikonDto) {
+    return this.tikonService.findAll(jwtPayload, findTikonDto);
   }
 }

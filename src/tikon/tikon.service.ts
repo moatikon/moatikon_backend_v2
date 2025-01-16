@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateTikonDto } from './dto/create-tikon.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tikon } from './entity/tikon.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { JwtPayload } from 'src/common/interface/jwt-payload';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/error/user-not-found.exception';
@@ -18,6 +18,7 @@ export class TikonService {
     private readonly userRepository: Repository<User>,
 
     private readonly s3Service: S3Service,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
@@ -25,26 +26,37 @@ export class TikonService {
     image: Express.Multer.File,
     createTikonDto: CreateTikonDto,
   ) {
-    const { tikonName, storeName, discount, category, dDay } = createTikonDto;
-    const user = await this.userRepository.findOne({
-      where: { email: jwtPayload.email },
-    });
+    const qr = this.dataSource.createQueryRunner();
+    await qr.startTransaction();
 
-    if (!user) throw new UserNotFoundException();
+    try {
+      const { tikonName, storeName, discount, category, dDay } = createTikonDto;
+      const user = await this.userRepository.findOne({
+        where: { email: jwtPayload.email },
+      });
 
-    const imageUrl = await this.s3Service.imageUploadToS3(image);
+      if (!user) throw new UserNotFoundException();
 
-    const tikon = this.tikonRepository.create({
-      image: imageUrl,
-      tikonName,
-      storeName,
-      discount,
-      category,
-      dDay,
-      user,
-    });
+      const imageUrl = await this.s3Service.imageUploadToS3(image);
 
-    return await this.tikonRepository.save(tikon);
+      const tikon = await this.tikonRepository.save({
+        image: imageUrl,
+        tikonName,
+        storeName,
+        discount,
+        category,
+        dDay,
+        user,
+      });
+
+      await qr.commitTransaction();
+      return tikon;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
   }
 
   async findAll(jwtPayload: JwtPayload, findTikonDto: FindTikonDto) {

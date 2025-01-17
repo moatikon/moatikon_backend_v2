@@ -11,4 +11,10 @@ export class User {
 
   @OneToMany(() => Tikon, (tikon) => tikon.user)
   tikons: Tikon[];
+
+  @Column({ default: true })
+  available: boolean;
+
+  @Column({ default: null })
+  withdrawDate: Date;
 }

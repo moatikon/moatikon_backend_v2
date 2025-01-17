@@ -25,6 +25,9 @@ export class Tikon {
   @Column()
   dDay: string;
 
+  @Column({ default: true })
+  available: boolean;
+
   @ManyToOne(() => User, (user) => user.tikons)
   user: User;
 

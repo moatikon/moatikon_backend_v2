@@ -60,6 +60,7 @@ export class AuthService {
     await qr.startTransaction();
 
     try {
+      const date = new Date();
       const { email } = jwtPayload;
       const userData = await this.userRepository.findOne({
         where: { email },
@@ -70,7 +71,7 @@ export class AuthService {
       }
 
       userData.available = false;
-      userData.withdrawDate = new Date();
+      userData.withdrawDate = new Date(date.setDate(date.getDate() + 30));
 
       await this.userRepository.save(userData);
       await qr.commitTransaction();

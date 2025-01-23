@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './common/guard/jwt.guard';
 import { JwtModule } from '@nestjs/jwt';
 import { UtilModule } from './util/util.module';
+import { CronModule } from './cron/cron.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { UtilModule } from './util/util.module';
     AuthModule,
     UserModule,
     TikonModule,
+    CronModule,
   ],
   providers: [
     {

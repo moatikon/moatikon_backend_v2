@@ -63,13 +63,13 @@ export class TikonService {
   async findAll(jwtPayload: JwtPayload, findTikonDto: FindTikonDto) {
     const takeNumber = 10;
     const { email } = jwtPayload;
-    const { page = 0 } = findTikonDto;
+    const { page = 0, available = 1 } = findTikonDto;
 
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new UserNotFoundException();
 
     return await this.tikonRepository.find({
-      where: { user, available: true },
+      where: { user, available: available === 1 },
       order: { dDay: 'ASC', createdAt: 'ASC' },
       take: takeNumber,
       skip: page * takeNumber,

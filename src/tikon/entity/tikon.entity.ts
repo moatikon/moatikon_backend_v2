@@ -1,6 +1,12 @@
 import { TikonCategory } from 'src/common/enum/tikon-category.enum';
 import { User } from 'src/user/entity/user.entity';
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Tikon {
@@ -23,7 +29,7 @@ export class Tikon {
   discount: number;
 
   @Column()
-  dDay: string;
+  dDay: Date;
 
   @Column({ default: true })
   available: boolean;

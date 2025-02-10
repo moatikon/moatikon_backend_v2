@@ -9,6 +9,9 @@ export class User {
   @Column()
   name: string;
 
+  @Column()
+  password: string;
+
   @OneToMany(() => Tikon, (tikon) => tikon.user)
   tikons: Tikon[];
 

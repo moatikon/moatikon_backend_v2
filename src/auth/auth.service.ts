@@ -4,10 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { TokenResponse } from './response/token.response';
-import { GoogleUser } from 'src/common/interface/google-user.interface';
+import { UserInterface } from 'src/common/interface/user.interface';
 import { JwtPayload } from 'src/common/interface/jwt-payload';
 import { UserNotFoundException } from 'src/exception/error/user-not-found.exception';
+import { SignUpRequest } from './request/signup.request';
+import { UserAlreadyExistsException } from 'src/exception/error/user-already-exists.exception';
+import * as bcrypt from 'bcrypt';
+import { TokenResponse } from './response/token.response';
+import { SignInRequest } from './request/signin.request';
+import { InvalidPasswordException } from 'src/exception/error/invalid-password.exception';
 
 @Injectable()
 export class AuthService {
@@ -19,38 +24,53 @@ export class AuthService {
     private readonly datasource: DataSource,
   ) {}
 
-  async generateJwt(googleUser: GoogleUser, isRefreshToken: boolean) {
+  async generateJwt(user: UserInterface, isRefreshToken: boolean) {
+    const expiresIn = isRefreshToken ? '7d' : '1d';
+
     return await this.jwtService.signAsync(
       {
-        email: googleUser.email,
+        email: user.email,
         isRefreshToken: isRefreshToken,
       },
       {
-        expiresIn: '24h',
+        expiresIn,
         secret: this.configService.get('JWT_SECRET'),
       },
     );
   }
 
-  async googleCallback(googleUser: GoogleUser) {
-    const userData = await this.userRepository.findOne({
-      where: { email: googleUser.email },
+  async signup(signupRequest: SignUpRequest) {
+    const { email, nickname, password } = signupRequest;
+
+    const userCheck = await this.userRepository.findOne({ where: { email } });
+    if (userCheck) throw new UserAlreadyExistsException();
+
+    const hashedPW: string = await bcrypt.hash(password, 10);
+
+    const user = await this.userRepository.save({
+      email,
+      name: nickname,
+      password: hashedPW,
     });
 
-    if (!userData) {
-      await this.userRepository.save({
-        email: googleUser.email,
-        name: googleUser.name,
-      });
-    } else if (!userData.available) {
-      userData.available = true;
-      userData.withdrawDate = null;
-      await this.userRepository.save(userData);
-    }
+    return new TokenResponse(
+      await this.generateJwt(user, false),
+      await this.generateJwt(user, true),
+    );
+  }
+
+  async signin(signinRequest: SignInRequest) {
+    const { email, password } = signinRequest;
+
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new UserNotFoundException();
+
+    if (!(await bcrypt.compare(password, user.password)))
+      throw new InvalidPasswordException();
 
     return new TokenResponse(
-      await this.generateJwt(googleUser, false),
-      await this.generateJwt(googleUser, true),
+      await this.generateJwt(user, false),
+      await this.generateJwt(user, true),
     );
   }
 

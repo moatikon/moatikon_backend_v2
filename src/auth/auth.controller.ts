@@ -1,26 +1,25 @@
-import { Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { GetGoogleUser } from 'src/common/decorator/get-google-user.decorator';
-import { GoogleUser } from 'src/common/interface/google-user.interface';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from 'src/common/decorator/public.decorator';
 import { GetPayload } from 'src/common/decorator/get-jwt-payload.decorator';
 import { JwtPayload } from 'src/common/interface/jwt-payload';
+import { SignUpRequest } from './request/signup.request';
+import { Public } from 'src/common/decorator/public.decorator';
+import { SignInRequest } from './request/signin.request';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  @Post('/signup')
+  async signup(@Body() signupReqeust: SignUpRequest) {
+    return await this.authService.signup(signupReqeust);
+  }
 
   @Public()
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleAuthCallback(@GetGoogleUser() googleUser: GoogleUser) {
-    return await this.authService.googleCallback(googleUser);
+  @Post('/signin')
+  async signin(@Body() singinRequest: SignInRequest) {
+    return await this.authService.signin(singinRequest);
   }
 
   @Post('/withdraw')

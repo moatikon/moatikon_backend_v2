@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateTikonDto } from './dto/create-tikon.dto';
+import { CreateTikonDto } from './request/create-tikon.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tikon } from './entity/tikon.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -7,7 +7,7 @@ import { JwtPayload } from 'src/common/interface/jwt-payload';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/error/user-not-found.exception';
 import { S3Service } from 'src/util/service/s3.service';
-import { FindTikonDto } from './dto/find-tikon.dto';
+import { FindTikonDto } from './request/find-tikon.dto';
 import { TikonNotFoundException } from 'src/exception/error/tikon-not-found.exception';
 
 @Injectable()

@@ -9,6 +9,7 @@ import { UserNotFoundException } from 'src/exception/error/user-not-found.except
 import { S3Service } from 'src/util/service/s3.service';
 import { FindTikonDto } from './request/find-tikon.dto';
 import { TikonNotFoundException } from 'src/exception/error/tikon-not-found.exception';
+import { TikonFindAllResponse } from './response/tikon_find_all.response';
 
 @Injectable()
 export class TikonService {
@@ -68,12 +69,14 @@ export class TikonService {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new UserNotFoundException();
 
-    return await this.tikonRepository.find({
-      where: { user, available: available === 1 },
-      order: { dDay: 'ASC', createdAt: 'ASC' },
-      take: takeNumber,
-      skip: page * takeNumber,
-    });
+    return new TikonFindAllResponse(
+      await this.tikonRepository.find({
+        where: { user, available: available === 1 },
+        order: { dDay: 'ASC', createdAt: 'ASC' },
+        take: takeNumber,
+        skip: page * takeNumber,
+      }),
+    );
   }
 
   async useTikon(jwtPayload: JwtPayload, id: string) {

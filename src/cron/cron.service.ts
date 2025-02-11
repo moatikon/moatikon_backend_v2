@@ -52,7 +52,8 @@ export class CronService {
 
   @Cron('0 0 * * *')
   async deleteExpiredTikons() {
-    const date = new Date();
+    let date = new Date();
+    date = new Date(date.setDate(date.getDate() - 1));
 
     const tikons = await this.tikonRepository
       .createQueryBuilder('tikon')

@@ -1,7 +1,6 @@
-import { Transform } from 'class-transformer';
 import { IsIn, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
-export class FindTikonDto {
+export class FindTikonRequest {
   @IsNumber()
   @IsOptional()
   @IsNotEmpty()

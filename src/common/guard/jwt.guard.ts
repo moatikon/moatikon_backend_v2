@@ -5,6 +5,8 @@ import { Public } from '../decorator/public.decorator';
 import { InvalidTokenFormatException } from 'src/exception/error/invalid-token-format.exception';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from '../interface/jwt-payload';
+import { RefreshToken } from '../decorator/refresh-token.decorator';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -18,22 +20,35 @@ export class JwtGuard implements CanActivate {
     const req: Request = context.switchToHttp().getRequest();
     const authorization = req.headers.authorization;
     const isPublic = this.reflector.get(Public, context.getHandler());
+    const isRefreshToken = this.reflector.get(
+      RefreshToken,
+      context.getHandler(),
+    );
 
     if (isPublic) {
       return true;
     }
 
-    const [bearer, token] = authorization.split(' ');
-
-    if (bearer.toLowerCase() != 'bearer') {
-      throw new InvalidTokenFormatException();
-    }
-
     try {
-      req.user = await this.jwtService.verifyAsync(token, {
+      const [bearer, token] = authorization.split(' ');
+
+      if (bearer.toLowerCase() != 'bearer') {
+        throw Error();
+      }
+
+      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get('JWT_SECRET'),
       });
-    } catch (err) {
+
+      if (
+        (isRefreshToken && payload.isRefreshToken) ||
+        (!isRefreshToken && !payload.isRefreshToken)
+      ) {
+        req.user = payload;
+      } else {
+        throw Error();
+      }
+    } catch (_) {
       throw new InvalidTokenFormatException();
     }
 

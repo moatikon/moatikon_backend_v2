@@ -14,25 +14,25 @@ services:
     ports:
       - '3000:3000'
 
-  mysql:
-    image: mysql:9.0
-    container_name: 'mysql_db'
-    secrets:
-      - my_db_password
-    environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_db_password
-      MYSQL_DATABASE: moatikon
-    ports:
-      - '6001:3306'
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
-secrets:
-  my_db_password: 
-    file: ./docker-secret/my_db_password.txt
+#   mysql:
+#     image: mysql:9.0
+#     container_name: 'mysql_db'
+#     secrets:
+#       - my_db_password
+#     environment:
+#       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_db_password
+#       MYSQL_DATABASE: moatikon
+#     ports:
+#       - '6001:3306'
+#     command:
+#       - --character-set-server=utf8mb4
+#       - --collation-server=utf8mb4_unicode_ci
+#     healthcheck:
+#       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 10
+#       start_period: 5s
+# secrets:
+#   my_db_password: 
+#     file: ./docker-secret/my_db_password.txt

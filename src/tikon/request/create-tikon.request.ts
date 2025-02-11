@@ -1,7 +1,7 @@
 import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
 import { TikonCategory } from 'src/common/enum/tikon-category.enum';
 
-export class CreateTikonDto {
+export class CreateTikonRequest {
   @IsString()
   @IsNotEmpty()
   storeName: string;

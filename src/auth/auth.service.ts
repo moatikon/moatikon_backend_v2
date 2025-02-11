@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserInterface } from 'src/common/interface/user.interface';
 import { JwtPayload } from 'src/common/interface/jwt-payload';
 import { UserNotFoundException } from 'src/exception/error/user-not-found.exception';
 import { SignUpRequest } from './request/signup.request';
@@ -67,6 +66,18 @@ export class AuthService {
 
     if (!(await bcrypt.compare(password, user.password)))
       throw new InvalidPasswordException();
+
+    return new TokenResponse(
+      await this.generateJwt(user, false),
+      await this.generateJwt(user, true),
+    );
+  }
+
+  async reissue(jwtPayload: JwtPayload) {
+    const { email } = jwtPayload;
+
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new UserNotFoundException();
 
     return new TokenResponse(
       await this.generateJwt(user, false),

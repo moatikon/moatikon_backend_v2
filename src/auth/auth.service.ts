@@ -24,7 +24,7 @@ export class AuthService {
     private readonly datasource: DataSource,
   ) {}
 
-  async generateJwt(user: UserInterface, isRefreshToken: boolean) {
+  async generateJwt(user: User, isRefreshToken: boolean) {
     const expiresIn = isRefreshToken ? '7d' : '1d';
 
     return await this.jwtService.signAsync(

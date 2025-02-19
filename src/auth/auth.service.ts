@@ -67,10 +67,21 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password)))
       throw new InvalidPasswordException();
 
-    return new TokenResponse(
-      await this.generateJwt(user, false),
-      await this.generateJwt(user, true),
-    );
+    if(user.available === false && user.withdrawDate != null) {
+      user.available = true;
+      user.withdrawDate = null;
+      await this.userRepository.save(user);
+
+      return new TokenResponse(
+        await this.generateJwt(user, false),
+        await this.generateJwt(user, true),
+      );
+    } else {
+      return new TokenResponse(
+        await this.generateJwt(user, false),
+        await this.generateJwt(user, true),
+      );
+    }
   }
 
   async reissue(jwtPayload: JwtPayload) {

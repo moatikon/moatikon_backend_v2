@@ -1,6 +1,6 @@
 export enum TikonCategory {
-  MEAL = 'MEAL',
-  DRINK = 'DRINK',
-  OBJECT = 'OBJECT',
-  ETC = 'ETC',
+  MEAL = '식사류',
+  DRINK = '음료',
+  OBJECT = '물건',
+  ETC = '기타',
 }

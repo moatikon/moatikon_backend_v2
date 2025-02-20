@@ -10,6 +10,7 @@ import { S3Service } from 'src/util/service/s3.service';
 import { FindTikonRequest } from './request/find-tikon.request';
 import { TikonNotFoundException } from 'src/exception/error/tikon-not-found.exception';
 import { TikonFindAllResponse } from './response/tikon_find_all.response';
+import { UpdateTikonRequest } from './request/update-tikon.request';
 
 @Injectable()
 export class TikonService {
@@ -53,6 +54,48 @@ export class TikonService {
 
       await qr.commitTransaction();
       return tikon;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
+  async updateTikon(
+    jwtPayload: JwtPayload,
+    id: string,
+    image: Express.Multer.File,
+    updateTikonRequest: UpdateTikonRequest,
+  ) {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      let s3ImagePath: string;
+      const { email } = jwtPayload;
+
+      const user = await this.userRepository.findOne({ where: { email } });
+      if (!user) throw new UserNotFoundException();
+
+      const tikon = await this.tikonRepository.findOne({ where: { id, user } });
+      if (!tikon) throw new TikonNotFoundException();
+
+      if (image) {
+        s3ImagePath = await this.s3Service.imageUploadToS3(image);
+        await this.s3Service.imageDeleteToS3(tikon.image);
+      } else {
+        s3ImagePath = tikon.image;
+      }
+
+      await this.tikonRepository.update(id, {
+        ...updateTikonRequest,
+        image: s3ImagePath,
+      });
+
+      await qr.commitTransaction();
+      return true;
     } catch (err) {
       await qr.rollbackTransaction();
       throw err;

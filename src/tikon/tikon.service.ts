@@ -106,4 +106,31 @@ export class TikonService {
       await qr.release();
     }
   }
+
+  async deleteTikon(jwtPayload: JwtPayload, id: string) {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const { email } = jwtPayload;
+
+      const user = await this.userRepository.findOne({ where: { email } });
+      if (!user) throw new UserNotFoundException();
+
+      const tikon = await this.tikonRepository.findOne({ where: { id, user } });
+      if (!tikon) throw new TikonNotFoundException();
+
+      await this.s3Service.imageDeleteToS3(tikon.image);
+      await this.tikonRepository.delete(id);
+
+      await qr.commitTransaction();
+      return true;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
 }

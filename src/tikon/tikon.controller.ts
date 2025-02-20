@@ -17,6 +17,7 @@ import { JwtPayload } from 'src/common/interface/jwt-payload';
 import { FindTikonRequest } from './request/find-tikon.request';
 import { IdValidatePipe } from 'src/common/pipe/id-validate.pipe';
 import { CreateTikonRequest } from './request/create-tikon.request';
+import { UpdateTikonRequest } from './request/update-tikon.request';
 
 @Controller('tikon')
 export class TikonController {
@@ -46,6 +47,22 @@ export class TikonController {
     @Param('id', IdValidatePipe) id: string,
   ) {
     return this.tikonService.useTikon(jwtPayload, id);
+  }
+
+  @Patch('/:id')
+  @UseInterceptors(FileInterceptor('image'))
+  updateTikon(
+    @GetPayload() jwtPayload: JwtPayload,
+    @Param('id', IdValidatePipe) id: string,
+    @UploadedFile() image: Express.Multer.File,
+    @Body() updateTikonRequest: UpdateTikonRequest,
+  ) {
+    return this.tikonService.updateTikon(
+      jwtPayload,
+      id,
+      image,
+      updateTikonRequest,
+    );
   }
 
   @Delete('/:id')

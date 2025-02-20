@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { TikonService } from './tikon.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -45,5 +46,13 @@ export class TikonController {
     @Param('id', IdValidatePipe) id: string,
   ) {
     return this.tikonService.useTikon(jwtPayload, id);
+  }
+
+  @Delete('/:id')
+  deleteTikon(
+    @GetPayload() jwtPayload: JwtPayload,
+    @Param('id', IdValidatePipe) id: string,
+  ) {
+    return this.tikonService.deleteTikon(jwtPayload, id);
   }
 }

@@ -11,6 +11,7 @@ import { FindTikonRequest } from './request/find-tikon.request';
 import { TikonNotFoundException } from 'src/exception/error/tikon-not-found.exception';
 import { TikonFindAllResponse } from './response/tikon_find_all.response';
 import { UpdateTikonRequest } from './request/update-tikon.request';
+import { InvalidDDayException } from 'src/exception/error/invalid-d-day.exception';
 
 @Injectable()
 export class TikonService {
@@ -39,6 +40,12 @@ export class TikonService {
       });
 
       if (!user) throw new UserNotFoundException();
+
+      const date = new Date();
+      const dDayDate = new Date(dDay);
+      if(date.getDate() > dDayDate.getDate()) {
+        throw new InvalidDDayException();
+      }
 
       const imageUrl = await this.s3Service.imageUploadToS3(image);
 
@@ -81,6 +88,14 @@ export class TikonService {
 
       const tikon = await this.tikonRepository.findOne({ where: { id, user } });
       if (!tikon) throw new TikonNotFoundException();
+
+      if(updateTikonRequest.dDay) {
+        const date = new Date();
+        const dDayDate = new Date(updateTikonRequest.dDay);
+        if(date.getDate() > dDayDate.getDate()) {
+          throw new InvalidDDayException();
+        }
+      }
 
       if (image) {
         s3ImagePath = await this.s3Service.imageUploadToS3(image);

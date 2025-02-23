@@ -15,7 +15,7 @@ export class CreateTikonRequest {
   category: TikonCategory;
 
   @Min(1)
-  @Max(100)
+  @Max(10)
   @IsNumber()
   @IsNotEmpty()
   discount: number;

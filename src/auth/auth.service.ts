@@ -39,7 +39,7 @@ export class AuthService {
   }
 
   async signup(signupRequest: SignUpRequest) {
-    const { email, nickname, password } = signupRequest;
+    const { email, nickname, password, deviceToken } = signupRequest;
 
     const userCheck = await this.userRepository.findOne({ where: { email } });
     if (userCheck) throw new UserAlreadyExistsException();
@@ -50,6 +50,7 @@ export class AuthService {
       email,
       name: nickname,
       password: hashedPW,
+      deviceToken
     });
 
     return new TokenResponse(
@@ -59,7 +60,7 @@ export class AuthService {
   }
 
   async signin(signinRequest: SignInRequest) {
-    const { email, password } = signinRequest;
+    const { email, password, deviceToken } = signinRequest;
 
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new UserNotFoundException();
@@ -70,6 +71,7 @@ export class AuthService {
     if(user.available === false && user.withdrawDate != null) {
       user.available = true;
       user.withdrawDate = null;
+      user.deviceToken = deviceToken;
       await this.userRepository.save(user);
 
       return new TokenResponse(
@@ -77,6 +79,8 @@ export class AuthService {
         await this.generateJwt(user, true),
       );
     } else {
+      await this.userRepository.update(user.email, { deviceToken });
+
       return new TokenResponse(
         await this.generateJwt(user, false),
         await this.generateJwt(user, true),

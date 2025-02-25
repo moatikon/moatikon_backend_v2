@@ -12,6 +12,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column()
+  deviceToken: string;
+
   @OneToMany(() => Tikon, (tikon) => tikon.user)
   tikons: Tikon[];
 

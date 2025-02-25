@@ -43,7 +43,7 @@ export class TikonService {
 
       const date = new Date();
       const dDayDate = new Date(dDay);
-      if(date.getDate() > dDayDate.getDate()) {
+      if(date > dDayDate) {
         throw new InvalidDDayException();
       }
 
@@ -92,7 +92,7 @@ export class TikonService {
       if(updateTikonRequest.dDay) {
         const date = new Date();
         const dDayDate = new Date(updateTikonRequest.dDay);
-        if(date.getDate() > dDayDate.getDate()) {
+        if(date > dDayDate) {
           throw new InvalidDDayException();
         }
       }

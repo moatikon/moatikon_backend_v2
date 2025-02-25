@@ -175,21 +175,35 @@ export class AuthService {
   }
 
   async editPw(editPWRequest: EditPWRequest): Promise<void> {
-    const { email, password, successCode } = editPWRequest;
-    const redisCode: string = await this.redisService.get(email);
+    const qr = this.datasource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
 
-    if (
-      successCode == redisCode &&
-      redisCode.includes(this.configService.get('CODE_CHECK_SECRET'))
-    ) {
-      let user = await this.userRepository.findOne({ where: { email } });
+    try {
+      const { email, password, successCode } = editPWRequest;
+      const redisCode: string = await this.redisService.get(email);
 
-      const hashedPW: string = await bcrypt.hash(password, 10);
-      user.password = hashedPW;
+      if (
+        successCode == redisCode &&
+        redisCode.includes(this.configService.get('CODE_CHECK_SECRET'))
+      ) {
+        let user = await this.userRepository.findOne({ where: { email } });
+        if (!user) throw new UserNotFoundException();
+  
+        const hashedPW: string = await bcrypt.hash(password, 10);
+        user.password = hashedPW;
+  
+        await this.userRepository.save(user);
+      } else {
+        throw new InvalidCodeException();
+      }
 
-      await this.userRepository.save(user);
-    } else {
-      throw new InvalidCodeException();
+      await qr.commitTransaction();
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
     }
   }
 }

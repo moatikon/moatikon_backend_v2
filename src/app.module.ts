@@ -30,6 +30,8 @@ import { CronModule } from './cron/cron.module';
         FB_PROJECT_ID: Joi.string().required(),
         FB_PRIVATE_KEY: Joi.string().required(),
         FB_CLIENT_EMAIL: Joi.string().required(),
+        MAILER_USER: Joi.string().required(),
+        MAILER_PW: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({

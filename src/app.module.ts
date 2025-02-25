@@ -27,6 +27,9 @@ import { CronModule } from './cron/cron.module';
         S3_BUCKET_NAME: Joi.string().required(),
         S3_ACCESS_KEY: Joi.string().required(),
         S3_SECRET_ACCESS_KEY: Joi.string().required(),
+        FB_PROJECT_ID: Joi.string().required(),
+        FB_PRIVATE_KEY: Joi.string().required(),
+        FB_CLIENT_EMAIL: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({

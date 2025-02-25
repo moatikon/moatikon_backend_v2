@@ -32,6 +32,9 @@ import { CronModule } from './cron/cron.module';
         FB_CLIENT_EMAIL: Joi.string().required(),
         MAILER_USER: Joi.string().required(),
         MAILER_PW: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
+        REDIS_PASSWORD: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({

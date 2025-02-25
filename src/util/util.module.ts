@@ -5,6 +5,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from './service/mail/mail.service';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { RedisService } from './service/redis.service';
 
 @Module({
   imports: [
@@ -31,8 +33,19 @@ import { MailService } from './service/mail/mail.service';
         },
       }),
     }),
+    RedisModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'single',
+        options: {
+          host: configService.get("REDIS_HOST"),
+          port: configService.get("REDIS_PORT"),
+          password: configService.get("REDIS_PASSWORD"),
+        }
+      })
+    })
   ],
-  providers: [S3Service, FcmService, MailService],
-  exports: [S3Service, FcmService, MailService],
+  providers: [S3Service, FcmService, MailService, RedisService],
+  exports: [S3Service, FcmService, MailService, RedisService],
 })
 export class UtilModule {}

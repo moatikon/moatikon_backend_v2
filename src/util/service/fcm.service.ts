@@ -8,10 +8,12 @@ export class FcmService {
   constructor(
     private readonly configService: ConfigService,
   ) {
+    const { privateKey } = JSON.parse(configService.get('FB_PRIVATE_KEY'));
+
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: configService.get('FB_PROJECT_ID'),
-        privateKey: configService.get('FB_PRIVATE_KEY'),
+        privateKey,
         clientEmail: configService.get('FB_CLIENT_EMAIL'),
       }),
     });

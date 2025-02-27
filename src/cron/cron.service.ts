@@ -59,15 +59,19 @@ export class CronService {
 
     // 5일 후에 만료되는 Tikon을 가진 사람들
     const users = await this.userRepository
-      .createQueryBuilder("user")
-      .innerJoin((qb) =>
-        qb
+      .createQueryBuilder("user").innerJoin(
+        (qb) => qb
           .select("a.userEmail as user")
           .from("tikon", "a")
-          .where("a.dDay < :date", { date }), "tikon", "user.email = tikon.user")
-      .groupBy("user.email")
-      .select(["user.email as email", "user.deviceToken as deviceToken", "user.name as name"])
-      .getRawMany();
+          .where("a.dDay < :date", { date })
+          .andWhere("a.available = true"),
+      "tikon",
+      "user.email = tikon.user"
+    )
+    .where("user.available = true")
+    .groupBy("user.email")
+    .select(["user.email as email", "user.deviceToken as deviceToken", "user.name as name"])
+    .getRawMany();
 
     if (users.length != 0) {
       for (let i = 0; i < users.length; i++) {

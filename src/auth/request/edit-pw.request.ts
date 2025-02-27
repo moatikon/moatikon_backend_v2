@@ -10,5 +10,5 @@ export class EditPWRequest {
   password: string;
 
   @IsNotEmpty()
-  successCode: string;
+  code: string;
 }

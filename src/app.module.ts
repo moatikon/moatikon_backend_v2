@@ -35,7 +35,6 @@ import { CronModule } from './cron/cron.module';
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
         REDIS_PASSWORD: Joi.string().required(),
-        CODE_CHECK_SECRET: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({

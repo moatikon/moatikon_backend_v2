@@ -146,7 +146,7 @@ export class AuthService {
     return code;
   }
 
-  async sendChangePWCode(sendChangePWCodeRequest: SendChangePWCodeRequest): Promise<void> {
+  async sendChangePWCode(sendChangePWCodeRequest: SendChangePWCodeRequest) {
     const { email } = sendChangePWCodeRequest;
 
     const user = await this.userRepository.findOneBy({ email });
@@ -158,35 +158,16 @@ export class AuthService {
     await this.redisService.set(email, code, 600);
   }
 
-  async checkChangePWCode(checkChangePWCodeRequest: CheckChangePWCodeRequest): Promise<string> {
-    const { email, code } = checkChangePWCodeRequest;
-    const redisCode: string = await this.redisService.get(email);
-
-    if (code == redisCode) {
-      const successCode =
-        this.configService.get('CODE_CHECK_SECRET') +
-        this._generateCode();
-
-      await this.redisService.set(email, successCode, 600);
-      return successCode;
-    } else {
-      throw new InvalidCodeException();
-    }
-  }
-
-  async editPw(editPWRequest: EditPWRequest): Promise<void> {
+  async editPw(editPWRequest: EditPWRequest) {
     const qr = this.datasource.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
 
     try {
-      const { email, password, successCode } = editPWRequest;
+      const { email, password, code } = editPWRequest;
       const redisCode: string = await this.redisService.get(email);
 
-      if (
-        successCode == redisCode &&
-        redisCode.includes(this.configService.get('CODE_CHECK_SECRET'))
-      ) {
+      if ( code == redisCode ) {
         let user = await this.userRepository.findOne({ where: { email } });
         if (!user) throw new UserNotFoundException();
   

@@ -46,14 +46,6 @@ export class AuthController {
   }
 
   @Public()
-  @Post('/check/code')
-  async checkChangePWCode(
-    @Body() checkChangePWCodeRequest: CheckChangePWCodeRequest,
-  ) {
-    return await this.authService.checkChangePWCode(checkChangePWCodeRequest);
-  }
-
-  @Public()
   @Post('/edit/password')
   async editPW(@Body() editPWRequest: EditPWRequest) {
     return await this.authService.editPw(editPWRequest);

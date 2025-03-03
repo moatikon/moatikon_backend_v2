@@ -59,7 +59,7 @@ export class AuthService {
       email,
       name: nickname,
       password: hashedPW,
-      deviceToken
+      deviceToken,
     });
 
     return new TokenResponse(
@@ -77,7 +77,7 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password)))
       throw new InvalidPasswordException();
 
-    if(user.available === false && user.withdrawDate != null) {
+    if (user.available === false && user.withdrawDate != null) {
       user.available = true;
       user.withdrawDate = null;
       user.deviceToken = deviceToken;
@@ -149,13 +149,19 @@ export class AuthService {
   async sendChangePWCode(sendChangePWCodeRequest: SendChangePWCodeRequest) {
     const { email } = sendChangePWCodeRequest;
 
-    const user = await this.userRepository.findOneBy({ email });
-    if (!user) throw new UserNotFoundException();
+    try {
+      const user = await this.userRepository.findOneBy({ email });
+      if (!user) throw new UserNotFoundException();
 
-    const code: string = this._generateCode();
+      const code: string = this._generateCode();
 
-    await this.mailService.sendCodeEmail(email, code);
-    await this.redisService.set(email, code, 600);
+      await this.mailService.sendCodeEmail(email, code);
+      await this.redisService.set(email, code, 600);
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async editPw(editPWRequest: EditPWRequest) {
@@ -167,13 +173,13 @@ export class AuthService {
       const { email, password, code } = editPWRequest;
       const redisCode: string = await this.redisService.get(email);
 
-      if ( code == redisCode ) {
+      if (code == redisCode) {
         let user = await this.userRepository.findOne({ where: { email } });
         if (!user) throw new UserNotFoundException();
-  
+
         const hashedPW: string = await bcrypt.hash(password, 10);
         user.password = hashedPW;
-  
+
         await this.userRepository.save(user);
       } else {
         throw new InvalidCodeException();

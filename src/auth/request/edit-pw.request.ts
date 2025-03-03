@@ -1,19 +1,14 @@
 import { IsEmail, IsNotEmpty, IsString, Length } from "class-validator";
 
-export class SignUpRequest {
-  @IsString()
-  @Length(1, 12)
-  @IsNotEmpty()
-  nickname: string;
-
+export class EditPWRequest {
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
-  @Length(4)
+  @IsString()
   @IsNotEmpty()
   password: string;
 
   @IsNotEmpty()
-  deviceToken: string;
+  code: string;
 }

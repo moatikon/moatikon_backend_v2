@@ -12,6 +12,12 @@ import * as bcrypt from 'bcrypt';
 import { TokenResponse } from './response/token.response';
 import { SignInRequest } from './request/signin.request';
 import { InvalidPasswordException } from 'src/exception/error/invalid-password.exception';
+import { MailService } from 'src/util/service/mail/mail.service';
+import { RedisService } from 'src/util/service/redis.service';
+import { SendChangePWCodeRequest } from './request/send-change-pw-code.request';
+import { CheckChangePWCodeRequest } from './request/check-change-pw-code.request';
+import { InvalidCodeException } from 'src/exception/error/invalid-code.exception';
+import { EditPWRequest } from './request/edit-pw.request';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +27,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly datasource: DataSource,
+
+    private readonly mailService: MailService,
+    private readonly redisService: RedisService,
   ) {}
 
   async generateJwt(user: User, isRefreshToken: boolean) {
@@ -39,7 +48,7 @@ export class AuthService {
   }
 
   async signup(signupRequest: SignUpRequest) {
-    const { email, nickname, password } = signupRequest;
+    const { email, nickname, password, deviceToken } = signupRequest;
 
     const userCheck = await this.userRepository.findOne({ where: { email } });
     if (userCheck) throw new UserAlreadyExistsException();
@@ -50,6 +59,7 @@ export class AuthService {
       email,
       name: nickname,
       password: hashedPW,
+      deviceToken,
     });
 
     return new TokenResponse(
@@ -59,7 +69,7 @@ export class AuthService {
   }
 
   async signin(signinRequest: SignInRequest) {
-    const { email, password } = signinRequest;
+    const { email, password, deviceToken } = signinRequest;
 
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new UserNotFoundException();
@@ -67,10 +77,24 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password)))
       throw new InvalidPasswordException();
 
-    return new TokenResponse(
-      await this.generateJwt(user, false),
-      await this.generateJwt(user, true),
-    );
+    if (user.available === false && user.withdrawDate != null) {
+      user.available = true;
+      user.withdrawDate = null;
+      user.deviceToken = deviceToken;
+      await this.userRepository.save(user);
+
+      return new TokenResponse(
+        await this.generateJwt(user, false),
+        await this.generateJwt(user, true),
+      );
+    } else {
+      await this.userRepository.update(user.email, { deviceToken });
+
+      return new TokenResponse(
+        await this.generateJwt(user, false),
+        await this.generateJwt(user, true),
+      );
+    }
   }
 
   async reissue(jwtPayload: JwtPayload) {
@@ -108,6 +132,60 @@ export class AuthService {
       await qr.commitTransaction();
 
       return true;
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+  }
+
+  _generateCode(): string {
+    const numCode = Math.floor(Math.random() * 1000000);
+    const code = String(numCode).padStart(6, '0');
+    return code;
+  }
+
+  async sendChangePWCode(sendChangePWCodeRequest: SendChangePWCodeRequest) {
+    const { email } = sendChangePWCodeRequest;
+
+    try {
+      const user = await this.userRepository.findOneBy({ email });
+      if (!user) throw new UserNotFoundException();
+
+      const code: string = this._generateCode();
+
+      await this.mailService.sendCodeEmail(email, code);
+      await this.redisService.set(email, code, 600);
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async editPw(editPWRequest: EditPWRequest) {
+    const qr = this.datasource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const { email, password, code } = editPWRequest;
+      const redisCode: string = await this.redisService.get(email);
+
+      if (code == redisCode) {
+        let user = await this.userRepository.findOne({ where: { email } });
+        if (!user) throw new UserNotFoundException();
+
+        const hashedPW: string = await bcrypt.hash(password, 10);
+        user.password = hashedPW;
+
+        await this.userRepository.save(user);
+      } else {
+        throw new InvalidCodeException();
+      }
+
+      await qr.commitTransaction();
     } catch (err) {
       await qr.rollbackTransaction();
       throw err;

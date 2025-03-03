@@ -6,6 +6,9 @@ import { SignUpRequest } from './request/signup.request';
 import { Public } from 'src/common/decorator/public.decorator';
 import { SignInRequest } from './request/signin.request';
 import { RefreshToken } from 'src/common/decorator/refresh-token.decorator';
+import { SendChangePWCodeRequest } from './request/send-change-pw-code.request';
+import { CheckChangePWCodeRequest } from './request/check-change-pw-code.request';
+import { EditPWRequest } from './request/edit-pw.request';
 
 @Controller('auth')
 export class AuthController {
@@ -32,5 +35,19 @@ export class AuthController {
   @Post('/withdraw')
   async withdrawUser(@GetPayload() jwtPayload: JwtPayload) {
     return await this.authService.withdraw(jwtPayload);
+  }
+
+  @Public()
+  @Post('/send/code')
+  async sendChangePWCode(
+    @Body() sendChangePWCodeRequest: SendChangePWCodeRequest,
+  ) {
+    return await this.authService.sendChangePWCode(sendChangePWCodeRequest);
+  }
+
+  @Public()
+  @Post('/edit/password')
+  async editPW(@Body() editPWRequest: EditPWRequest) {
+    return await this.authService.editPw(editPWRequest);
   }
 }

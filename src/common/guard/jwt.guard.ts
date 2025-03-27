@@ -36,17 +36,16 @@ export class JwtGuard implements CanActivate {
         throw Error();
       }
 
-      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get('JWT_SECRET'),
-      });
-
-      if (
-        (isRefreshToken && payload.isRefreshToken) ||
-        (!isRefreshToken && !payload.isRefreshToken)
-      ) {
+      if(isRefreshToken) {
+        const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get('JWT_SECRET_RE'),
+        });
         req.user = payload;
       } else {
-        throw Error();
+        const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get('JWT_SECRET'),
+        });
+        req.user = payload;
       }
     } catch (_) {
       throw new InvalidTokenFormatException();

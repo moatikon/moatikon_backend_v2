@@ -56,6 +56,7 @@ import { CronModule } from './cron/cron.module';
     UserModule,
     TikonModule,
     CronModule,
+    UtilModule
   ],
   providers: [
     {

@@ -32,19 +32,25 @@ export class AuthService {
     private readonly redisService: RedisService,
   ) {}
 
-  async generateJwt(user: User, isRefreshToken: boolean) {
-    const expiresIn = isRefreshToken ? '7d' : '1d';
+  async generateTokenResponse(user: User) {
+    const generateJwt = async (isRefreshToken: boolean) => {
+      const expiresIn = isRefreshToken ? '7d' : '1d';
+      const secret = isRefreshToken
+        ? this.configService.get('JWT_SECRET_RE')
+        : this.configService.get('JWT_SECRET');
 
-    return await this.jwtService.signAsync(
-      {
-        email: user.email,
-        isRefreshToken: isRefreshToken,
-      },
-      {
-        expiresIn,
-        secret: this.configService.get('JWT_SECRET'),
-      },
-    );
+      return await this.jwtService.signAsync(
+        { email: user.email },
+        { expiresIn, secret },
+      );
+    };
+
+    const accessToken = await generateJwt(false);
+    const refreshToken = await generateJwt(true);
+
+    this.redisService.set(`${user.email}_re`, refreshToken);
+
+    return new TokenResponse(accessToken, refreshToken);
   }
 
   async signup(signupRequest: SignUpRequest) {
@@ -62,10 +68,7 @@ export class AuthService {
       deviceToken,
     });
 
-    return new TokenResponse(
-      await this.generateJwt(user, false),
-      await this.generateJwt(user, true),
-    );
+    return this.generateTokenResponse(user);
   }
 
   async signin(signinRequest: SignInRequest) {
@@ -83,17 +86,11 @@ export class AuthService {
       user.deviceToken = deviceToken;
       await this.userRepository.save(user);
 
-      return new TokenResponse(
-        await this.generateJwt(user, false),
-        await this.generateJwt(user, true),
-      );
+      return this.generateTokenResponse(user);
     } else {
       await this.userRepository.update(user.email, { deviceToken });
 
-      return new TokenResponse(
-        await this.generateJwt(user, false),
-        await this.generateJwt(user, true),
-      );
+      return this.generateTokenResponse(user);
     }
   }
 
@@ -103,10 +100,7 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new UserNotFoundException();
 
-    return new TokenResponse(
-      await this.generateJwt(user, false),
-      await this.generateJwt(user, true),
-    );
+    return this.generateTokenResponse(user);
   }
 
   async withdraw(jwtPayload: JwtPayload) {
@@ -117,9 +111,7 @@ export class AuthService {
     try {
       const date = new Date();
       const { email } = jwtPayload;
-      const userData = await this.userRepository.findOne({
-        where: { email },
-      });
+      const userData = await this.userRepository.findOne({ where: { email } });
 
       if (!userData) {
         throw new UserNotFoundException();

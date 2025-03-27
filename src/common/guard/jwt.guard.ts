@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../interface/jwt-payload';
 import { RefreshToken } from '../decorator/refresh-token.decorator';
+import { RedisService } from 'src/util/service/redis.service';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -14,6 +15,7 @@ export class JwtGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,17 +38,19 @@ export class JwtGuard implements CanActivate {
         throw Error();
       }
 
-      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get('JWT_SECRET'),
-      });
-
-      if (
-        (isRefreshToken && payload.isRefreshToken) ||
-        (!isRefreshToken && !payload.isRefreshToken)
-      ) {
+      if(isRefreshToken) {
+        const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get('JWT_SECRET_RE'),
+        });
+        if(await this.redisService.get(`${payload.email}_re`) != token) {
+          throw Error();
+        }
         req.user = payload;
       } else {
-        throw Error();
+        const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get('JWT_SECRET'),
+        });
+        req.user = payload;
       }
     } catch (_) {
       throw new InvalidTokenFormatException();

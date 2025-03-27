@@ -23,6 +23,7 @@ import { CronModule } from './cron/cron.module';
         DB_PASSWORD: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
+        JWT_SECRET_RE: Joi.string().required(),
         S3_REGION: Joi.string().required(),
         S3_BUCKET_NAME: Joi.string().required(),
         S3_ACCESS_KEY: Joi.string().required(),
@@ -55,6 +56,7 @@ import { CronModule } from './cron/cron.module';
     UserModule,
     TikonModule,
     CronModule,
+    UtilModule
   ],
   providers: [
     {

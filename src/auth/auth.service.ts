@@ -34,15 +34,17 @@ export class AuthService {
 
   async generateJwt(user: User, isRefreshToken: boolean) {
     const expiresIn = isRefreshToken ? '7d' : '1d';
+    const secret = isRefreshToken
+      ? this.configService.get('JWT_SECRET_RE')
+      : this.configService.get('JWT_SECRET');
 
     return await this.jwtService.signAsync(
       {
         email: user.email,
-        isRefreshToken: isRefreshToken,
       },
       {
         expiresIn,
-        secret: this.configService.get('JWT_SECRET'),
+        secret,
       },
     );
   }
